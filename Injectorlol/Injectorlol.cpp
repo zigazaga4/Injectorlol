@@ -1,7 +1,10 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <iostream>
+#include <filesystem>
+#include <string> // Include string header for std::string and std::getline
 
+// Function to get the process ID by name
 DWORD GetProcessID(const wchar_t* processName) {
     PROCESSENTRY32W processEntry = { 0 };
     processEntry.dwSize = sizeof(PROCESSENTRY32W);
@@ -24,6 +27,7 @@ DWORD GetProcessID(const wchar_t* processName) {
     return 0;
 }
 
+// Function to inject the DLL into the target process
 bool InjectDLL(DWORD processID, const char* dllPath) {
     HANDLE processHandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
     if (!processHandle) {
@@ -60,7 +64,13 @@ bool InjectDLL(DWORD processID, const char* dllPath) {
 
 int main() {
     const wchar_t* targetProcess = L"Screenshotter.exe"; // Change this to your target process name
-    const char* dllPath = "C:\\Users\\Leo\\source\\repos\\Loloverlay\\x64\\Release\\Loloverlay.dll"; // Change this to your DLL path
+
+    std::string directoryPath;
+    std::cout << "Enter the path to the directory containing Loloverlay.dll: ";
+    std::getline(std::cin, directoryPath);
+
+    std::filesystem::path dllFullPath = std::filesystem::path(directoryPath) / "Loloverlay.dll";
+    std::string dllPath = dllFullPath.string();
 
     DWORD processID = GetProcessID(targetProcess);
     if (!processID) {
@@ -68,7 +78,7 @@ int main() {
         return 1;
     }
 
-    if (InjectDLL(processID, dllPath)) {
+    if (InjectDLL(processID, dllPath.c_str())) {
         std::cout << "DLL injected successfully." << std::endl;
     }
     else {
